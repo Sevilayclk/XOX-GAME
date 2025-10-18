@@ -1,100 +1,121 @@
-oyun_tahtası = [ ' ' for x in range(10)]
+import random #This imports the random module that contains the randint() function
+import os
+from colorama import Fore, Style, init
+init(autoreset=True)
 
-def ekrana_göster():
-    print(' '+ oyun_tahtası[1] + ' ' +  '|' + ' ' + oyun_tahtası[2] + ' '+ '|'+' '+ oyun_tahtası[3])
-    print("__________")
-    print(' '+ oyun_tahtası[4] + ' ' +  '|' + ' ' + oyun_tahtası[5] + ' '+ '|'+' '+ oyun_tahtası[6])
-    print("__________")
-    print(' '+ oyun_tahtası[7] + ' ' +  '|' + ' ' + oyun_tahtası[8] + ' '+ '|'+' '+ oyun_tahtası[9])
+def colorize(cell: str) -> str:
+    if cell == "X":
+        return Fore.CYAN + Style.BRIGHT + "X" + Style.RESET_ALL
+    if cell == "O":
+        return Fore.MAGENTA + Style.BRIGHT + "O" + Style.RESET_ALL
+    return cell
 
-def harf_koy(harf,konum):
-    oyun_tahtası[konum] = harf
 
-def alan_bos_mu(konum):
-    return oyun_tahtası[konum] == ' '
 
-def tahta_dolu():
-    if oyun_tahtası.count(' ') > 1 : 
-        return  False
-    else: 
-        return True 
-        
-def kazanan(oyun_tahtası,harf):
-    return (oyun_tahtası[1] == harf and oyun_tahtası[2] == harf and oyun_tahtası[3] == harf) or ( oyun_tahtası[4] == harf and oyun_tahtası[5] == harf and oyun_tahtası[6] == harf) or ( oyun_tahtası[7] == harf and oyun_tahtası[8] and oyun_tahtası[9] == harf) or ( oyun_tahtası[1] == harf and oyun_tahtası[4] and oyun_tahtası[7] == harf)  or ( oyun_tahtası[2] == harf and oyun_tahtası[5] and oyun_tahtası[8] == harf) or ( oyun_tahtası[3] == harf and oyun_tahtası[6] and oyun_tahtası[9] == harf) or ( oyun_tahtası[1] == harf and oyun_tahtası[5] and oyun_tahtası[9] == harf) or ( oyun_tahtası[3] == harf and oyun_tahtası[5]== harf and oyun_tahtası[7] == harf)
+board= ["-","-","-",
+        "-","-","-",
+        "-","-","-"]
+currentplayer = "X"
+winner = None
+gamerunning = True
 
-def oyuncu_hareketi():
-    konum = int(input("1-9 arasında bir konum giriniz : "))
-    if alan_bos_mu(konum):
-        harf_koy('X',konum)
-        if kazanan(oyun_tahtası,'X'):
-            ekrana_göster()
-            print("tebrikler,kazandınız!")
-            exit()
-        ekrana_göster()
+def clear():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
+#printing the game board
+
+def printboard(board):
+    print(f" {colorize(board[0])} │ {colorize(board[1])} │ {colorize(board[2])}")
+    print("───┼───┼───")
+    print(f" {colorize(board[3])} │ {colorize(board[4])} │ {colorize(board[5])}")
+    print("───┼───┼───")
+    print(f" {colorize(board[6])} │ {colorize(board[7])} │ {colorize(board[8])}")
+
+#printboard(board)
+
+#take input fot the player 
+
+def playerınput(board):
+    inp = int(input("Enter a number 1-9: "))
+    if inp >= 1 and inp <=9 and board[inp-1] =="-":
+        board[inp-1]= currentplayer
     else:
-        print("girdiğiniz konum dolu ! tekrar seçiniz")
-        oyuncu_hareketi()
+        print("Player is already in that spot!!(o yer dolu yani!!)")
+#check for win or tie
 
-def bilgisayar_hareketi():
-    müsait_konumlar = [konum for konum ,harf in enumerate(oyun_tahtası) if harf == ' ' and konum !=0]
+def checkhorizontle(board):
+    global winner
+    if board[0] == board[1] == board[2] and board[1] != "-":
+        winner = board[0]
+        return True
+    elif board[3] == board[4] == board[5] and board[3] != "-":
+        winner = board[3]
+        return True
+    elif board[6] == board[7] == board[8] and board[6] != "-":
+        winner = board[6]
+        return True
     
-    hareket = 0
 
-    for harf in ['O', 'X']:
-        for i in müsait_konumlar:
-            yeni_tahta = oyun_tahtası[:]
-            yeni_tahta[i] = harf
-            if kazanan(yeni_tahta,harf):
-                hareket = i
-                return hareket
+def checkrow(board):
+    global winner
+    if board[0] == board[3] == board[6] and board[0] != "-":
+        winner = board[0]
+        return True
+    elif board[1] == board[4] == board[7] and board[1] != "-":
+        winner = board[1]
+        return True
+    elif board[2] == board[5] == board[8] and board[2] != "-":
+        winner = board[2]
+        return True
+    
+def checkagle(board):
+    global winner
+    if board[0] == board[4] == board[8] and board[0] != "-":
+        winner = board[0]
+        return True
+    elif board[2] == board[4] == board[6] and board[2] != "-":
+        winner = board[2]
+        return True
+def checktie(board):
+    global gamerunning
+    if "-" not in board:
+        printboard(board)
+        print("it is a tie!")
+        gamerunning= False 
 
+def checkwin():
+    if checkagle(board) or checkhorizontle(board) or checkrow(board):
+        printboard(board) 
+        print(f"the winner is {winner}") 
+        gamerunning = False
 
-    köşeler = []
-    for i in müsait_konumlar:
-        if i in [1,3,7,9]:
-            köşeler.append(i)
+# switch the player
+def switchplayer():
+    global currentplayer
+    if currentplayer == "X":
+        currentplayer = "O"
+    else:
 
-    if len(köşeler) > 0:
-        hareket = random.choice(köşeler)
-        return hareket
-
-    if 5 in müsait_konumlar:
-        hareket = 5
-        return hareket
-
-    içerisi = []
-    for i in müsait_konumlar:
-        if i in [2,4,6,8]:
-            içerisi.append(i)
-
-    if len(içerisi) > 0:
-        hareket = random.choice(içerisi)
-        return hareket
-
-def oyun():
-    print ("XOX oyununa hoşgeldiniz")
-    ekrana_göster()
-    while not tahta_dolu():
-
-        oyuncu_hareketi()
-        if tahta_dolu():
-            print("oyun bitti kazanan yok !!")
-            exit()
-
-        print("______________")
-        
-        bilgisayarHareketi = bilgisayar_hareketi()
-        harf_koy('O',bilgisayarHareketi)
-        if kazanan(oyun_tahtası,'O'):
-            ekrana_göster()
-            print("Bilgisayar kazandı. Tekrar deneyiniz!")
-            exit() 
+        currentplayer = "X"   
+#computer 
+def computer(board):
+    while currentplayer == "O":
+        position = random.randint(0,8)
+        if board[position] == "-":
+            board[position] = "O"
+            switchplayer()
             
-        ekrana_göster()
-        if tahta_dolu():
-            print(" oyun bitti . Kazanan yok !")
-            exit()
+# check for win or tie again
 
-        print("______________")
-
-oyun ()
+while gamerunning:
+    clear()
+    printboard(board)
+    print(f"\nSıra: {colorize(currentplayer)}")
+    playerınput(board)
+    checkwin()
+    checktie(board)
+    switchplayer()
+    computer(board)
+    checkwin()
+    checktie(board)
